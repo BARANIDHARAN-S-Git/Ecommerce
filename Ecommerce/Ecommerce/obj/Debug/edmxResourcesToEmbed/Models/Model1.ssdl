@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="EcommerceDatabaseModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+  <EntityType Name="Invoice">
+    <Key>
+      <PropertyRef Name="InvoiceId" />
+    </Key>
+    <Property Name="InvoiceId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="Invoice_FK_User" Type="int" />
+    <Property Name="Invoicedate" Type="datetime" />
+    <Property Name="InvoiceTotalBill" Type="float" />
+  </EntityType>
+  <EntityType Name="Order_tbl">
+    <Key>
+      <PropertyRef Name="OrderId" />
+    </Key>
+    <Property Name="OrderId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="Order_FK_Product" Type="int" />
+    <Property Name="order_FK_Invoice" Type="int" />
+    <Property Name="OrderDate" Type="datetime" />
+    <Property Name="OrderQuantity" Type="int" />
+    <Property Name="OrderBill" Type="float" />
+    <Property Name="OrderUnitprice" Type="int" />
+  </EntityType>
+  <EntityType Name="Product">
+    <Key>
+      <PropertyRef Name="ProductId" />
+    </Key>
+    <Property Name="ProductId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ProductName" Type="nvarchar" MaxLength="60" Nullable="false" />
+    <Property Name="ProductPrice" Type="float" />
+    <Property Name="ProductDescription" Type="nvarchar" MaxLength="700" Nullable="false" />
+    <Property Name="ProductImage" Type="nvarchar(max)" />
+  </EntityType>
+  <EntityType Name="User_tbl">
+    <Key>
+      <PropertyRef Name="UserId" />
+    </Key>
+    <Property Name="UserId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="UserName" Type="varchar" MaxLength="60" Nullable="false" />
+    <Property Name="UserContact" Type="nvarchar" MaxLength="60" Nullable="false" />
+    <Property Name="UserPassword" Type="nvarchar" MaxLength="60" Nullable="false" />
+  </EntityType>
+  <Association Name="FK__Invoice__Invoice__00200768">
+    <End Role="User_tbl" Type="Self.User_tbl" Multiplicity="0..1" />
+    <End Role="Invoice" Type="Self.Invoice" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="User_tbl">
+        <PropertyRef Name="UserId" />
+      </Principal>
+      <Dependent Role="Invoice">
+        <PropertyRef Name="Invoice_FK_User" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__Order_tbl__Order__02FC7413">
+    <End Role="Product" Type="Self.Product" Multiplicity="0..1" />
+    <End Role="Order_tbl" Type="Self.Order_tbl" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Product">
+        <PropertyRef Name="ProductId" />
+      </Principal>
+      <Dependent Role="Order_tbl">
+        <PropertyRef Name="Order_FK_Product" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__Order_tbl__order__03F0984C">
+    <End Role="Invoice" Type="Self.Invoice" Multiplicity="0..1" />
+    <End Role="Order_tbl" Type="Self.Order_tbl" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Invoice">
+        <PropertyRef Name="InvoiceId" />
+      </Principal>
+      <Dependent Role="Order_tbl">
+        <PropertyRef Name="order_FK_Invoice" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <EntityContainer Name="EcommerceDatabaseModelStoreContainer">
+    <EntitySet Name="Invoice" EntityType="Self.Invoice" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Order_tbl" EntityType="Self.Order_tbl" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Product" EntityType="Self.Product" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="User_tbl" EntityType="Self.User_tbl" Schema="dbo" store:Type="Tables" />
+    <AssociationSet Name="FK__Invoice__Invoice__00200768" Association="Self.FK__Invoice__Invoice__00200768">
+      <End Role="User_tbl" EntitySet="User_tbl" />
+      <End Role="Invoice" EntitySet="Invoice" />
+    </AssociationSet>
+    <AssociationSet Name="FK__Order_tbl__Order__02FC7413" Association="Self.FK__Order_tbl__Order__02FC7413">
+      <End Role="Product" EntitySet="Product" />
+      <End Role="Order_tbl" EntitySet="Order_tbl" />
+    </AssociationSet>
+    <AssociationSet Name="FK__Order_tbl__order__03F0984C" Association="Self.FK__Order_tbl__order__03F0984C">
+      <End Role="Invoice" EntitySet="Invoice" />
+      <End Role="Order_tbl" EntitySet="Order_tbl" />
+    </AssociationSet>
+  </EntityContainer>
+</Schema>

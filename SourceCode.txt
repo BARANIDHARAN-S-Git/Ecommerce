@@ -1,0 +1,276 @@
+GithubLink:https://github.com/BARANIDHARAN-S-Git/Ecommerce
+----------------------------HomeController.cs----------------------
+using Ecommerce.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web.Mvc;
+
+namespace Ecommerce.Controllers
+{
+    public class HomeController : Controller
+    {
+        EcommerceDatabaseEntities e = new EcommerceDatabaseEntities();
+        public ActionResult Index()
+        {
+            Session["UserId"]=1;
+            if (TempData["cart"] != null)
+            {
+                float x = 0;
+                List<EcommerceModel> t = TempData["cart"] as List<EcommerceModel>;
+                foreach (var item in t)
+                {
+                    x += item.Bill;
+
+                }
+
+                TempData["total"] = x;
+            }
+            TempData.Keep();
+            return View(e.Product.OrderByDescending(a=>a.ProductId).ToList());
+        }
+
+        public ActionResult Addtocart(int? Id)
+        {
+
+            Product p = e.Product.Where(x => x.ProductId == Id).SingleOrDefault();
+            return View(p);
+        }
+
+        List<EcommerceModel> li = new List<EcommerceModel>();
+       
+        [HttpPost]
+        public ActionResult Addtocart(Product pi, string qty, int Id)
+        {
+            Product p = e.Product.Where(x => x.ProductId == Id).SingleOrDefault();
+
+            EcommerceModel c = new EcommerceModel();
+            c.productid = p.ProductId;
+            c.price = (float)p.ProductPrice;
+            c.Quantity = Convert.ToInt32(qty);
+            c.Bill = c.price * c.Quantity;
+            c.productname = p.ProductName;
+            if (TempData["cart"] == null)
+            {
+                li.Add(c);
+                TempData["cart"] = li;
+
+            }
+            else
+            {
+                List<EcommerceModel> l = TempData["cart"] as List<EcommerceModel>;
+                int flag = 0;
+                foreach(var item in l)
+                {
+                    if(item.productid==c.productid)
+                    {
+                        item.Quantity += c.Quantity;
+                        item.Bill += c.Bill;
+                        flag = 1;
+                    }
+                }
+                if(flag == 0)
+                {
+                    l.Add(c);
+                }
+                TempData["cart"] = l;
+            }
+
+            TempData.Keep();
+
+
+
+
+            return RedirectToAction("Index");
+        }
+
+        public ActionResult remove(int ? id)
+        {
+            List<EcommerceModel> b = TempData["cart"] as List<EcommerceModel>;
+            EcommerceModel c = b.Where(ae => ae.productid == id).SingleOrDefault();
+            b.Remove(c);
+            float a = 0;
+            foreach(var item in b)
+            {
+                a += item.Bill;
+            }
+            TempData["total"] = a;
+            return RedirectToAction("ViewCart");
+        }
+        public ActionResult ViewCart()
+        {
+            TempData.Keep();
+
+
+            return View();
+        }
+        [HttpPost]
+        public ActionResult ViewCart(Order_tbl o)
+        {
+            List<EcommerceModel> list = TempData["cart"] as List<EcommerceModel>;
+            Invoice i = new Invoice();
+            i.Invoice_FK_User = Convert.ToInt32(Session["UserId"].ToString());
+            i.Invoicedate = System.DateTime.Now;
+            i.InvoiceTotalBill = (float)TempData["total"];
+            e.Invoice.Add(i);
+            e.SaveChanges();
+
+            foreach(var item in list)
+            {
+                Order_tbl or = new Order_tbl();
+                or.Order_FK_Product = item.productid;
+                or.order_FK_Invoice = i.InvoiceId;
+                or.OrderDate = System.DateTime.Now;
+                or.OrderQuantity = item.Quantity;
+                or.OrderUnitprice = (int)item.price;
+                or.OrderBill = item.Bill;
+                e.Order_tbl.Add(or);
+                e.SaveChanges();
+
+            }
+
+            TempData.Remove("total");
+            TempData.Remove("cart");
+
+            TempData["msg"] = "Ordered Successfully";
+            TempData.Keep();
+
+
+            return RedirectToAction("Index");
+
+        }
+
+        public ActionResult About()
+        {
+            ViewBag.message = "Your Application Description Page";
+            return View();
+        }
+
+        public ActionResult Contact()
+        {
+            ViewBag.message = "Your Contact Page";
+            return View();
+        }
+         
+    }
+}
+
+------------------------------EcommerceModel.cs------------------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace Ecommerce.Models
+{
+    public class EcommerceModel
+    {
+        public int productid { get; set; }
+        public string productname { get; set; }
+
+        public float price { get; set; }
+        public int Quantity { get; set; }
+        public float Bill { get; set; }
+    }
+}
+
+-------------------------------------Invoice.cs----------------------
+
+namespace Ecommerce.Models
+{
+    using System;
+    using System.Collections.Generic;
+    
+    public partial class Invoice
+    {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public Invoice()
+        {
+            this.Order_tbl = new HashSet<Order_tbl>();
+        }
+    
+        public int InvoiceId { get; set; }
+        public Nullable<int> Invoice_FK_User { get; set; }
+        public Nullable<System.DateTime> Invoicedate { get; set; }
+        public Nullable<double> InvoiceTotalBill { get; set; }
+    
+        public virtual User_tbl User_tbl { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Order_tbl> Order_tbl { get; set; }
+    }
+}
+---------------------------------Order_tbl.cs-----------------------
+
+namespace Ecommerce.Models
+{
+    using System;
+    using System.Collections.Generic;
+    
+    public partial class Order_tbl
+    {
+        public int OrderId { get; set; }
+        public Nullable<int> Order_FK_Product { get; set; }
+        public Nullable<int> order_FK_Invoice { get; set; }
+        public Nullable<System.DateTime> OrderDate { get; set; }
+        public Nullable<int> OrderQuantity { get; set; }
+        public Nullable<double> OrderBill { get; set; }
+        public Nullable<int> OrderUnitprice { get; set; }
+    
+        public virtual Invoice Invoice { get; set; }
+        public virtual Product Product { get; set; }
+    }
+}
+
+
+-------------------------------Product.cs--------------------------
+
+namespace Ecommerce.Models
+{
+    using System;
+    using System.Collections.Generic;
+    
+    public partial class Product
+    {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public Product()
+        {
+            this.Order_tbl = new HashSet<Order_tbl>();
+        }
+    
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
+        public Nullable<double> ProductPrice { get; set; }
+        public string ProductDescription { get; set; }
+        public string ProductImage { get; set; }
+    
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Order_tbl> Order_tbl { get; set; }
+    }
+}
+
+
+----------------------------------User_tbl.cs-----------------------
+
+namespace Ecommerce.Models
+{
+    using System;
+    using System.Collections.Generic;
+    
+    public partial class User_tbl
+    {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public User_tbl()
+        {
+            this.Invoices = new HashSet<Invoice>();
+        }
+    
+        public int UserId { get; set; }
+        public string UserName { get; set; }
+        public string UserContact { get; set; }
+        public string UserPassword { get; set; }
+    
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Invoice> Invoices { get; set; }
+    }
+}
+
